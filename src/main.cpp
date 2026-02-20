@@ -1,4 +1,5 @@
 #include <exception>
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -48,18 +49,51 @@ private:
     std::string white_;
 };
 
+class SVGRenderer {
+public:
+    SVGRenderer(int margin = 4, int scale = 10)
+        : margin_(margin), scale_(scale) {}
+
+    void render(const QR& qr, const std::string& path) const {
+        std::ofstream out(path);
+        if (!out) {
+            throw std::runtime_error("Failed to open file: " + path);
+        }
+
+        int size = (qr.width() + margin_ * 2) * scale_;
+        out << "<svg xmlns='http://www.w3.org/2000/svg' width='" << size << "' height='" << size << "'>\n";
+        out << "<rect width='100%' height='100%' fill='white'/>\n";
+        for (int y = 0; y < qr.width(); ++y)
+            for (int x = 0; x < qr.width(); ++x)
+                if (qr.data()[y * qr.width() + x] & 1)
+                    out << "<rect x='" << (x + margin_) * scale_ << "' y='" << (y + margin_) * scale_
+                        << "' width='" << scale_ << "' height='" << scale_ << "'/>\n";
+        out << "</svg>\n";
+    }
+
+private:
+    int margin_;
+    int scale_;
+};
+
 }
 
 int main(int argc, char **argv) {
     try {
         if (argc < 2) {
-            std::cerr << "Usage: " << argv[0] << " <text-to-encode>\n";
+            std::cerr << "Usage: " << argv[0] << " <text-to-encode> [output.svg]\n";
             return 1;
         }
 
         qrcode::QR qr(argv[1], QR_ECLEVEL_M);
-        qrcode::TerminalRenderer renderer;
-        renderer.render(qr);
+
+        if (argc >= 3) {
+            qrcode::SVGRenderer renderer;
+            renderer.render(qr, argv[2]);
+        } else {
+            qrcode::TerminalRenderer renderer;
+            renderer.render(qr);
+        }
     }
     catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
