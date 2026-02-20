@@ -1,0 +1,12 @@
+# Xmake cache
+.xmake/
+build/
+
+# MacOS Cache
+.DS_Store
+
+# clangd cache
+.cache
+
+# LSP
+compile_commands.json

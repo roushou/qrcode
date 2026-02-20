@@ -1,0 +1,70 @@
+#include <exception>
+#include <iostream>
+#include <memory>
+#include <string>
+
+extern "C" {
+#include <qrencode.h>
+}
+
+namespace qrcode {
+
+struct QR {
+    std::unique_ptr<QRcode, decltype(&QRcode_free)> code;
+
+    QR(const std::string& text, QRecLevel level = QR_ECLEVEL_M)
+        : code(QRcode_encodeString(text.c_str(), 0, level, QR_MODE_8, 1), &QRcode_free)
+    {
+        if (!code) {
+            throw std::runtime_error("Failed to generate QR code for: " + text);
+        }
+    }
+
+    int width() const { return code->width; }
+    const unsigned char* data() const { return code->data; }
+};
+
+class TerminalRenderer {
+public:
+    TerminalRenderer(int margin = 4, const std::string& black = "██", const std::string& white = "  ")
+        : margin_(margin), black_(black), white_(white) {}
+
+    void render(const QR& qr) const {
+        for (int y = -margin_; y < qr.width() + margin_; ++y) {
+            for (int x = -margin_; x < qr.width() + margin_; ++x) {
+                bool black = false;
+                if (x >= 0 && y >= 0 && x < qr.width() && y < qr.width())
+                    black = qr.data()[y * qr.width() + x] & 1;
+
+                std::cout << (black ? black_ : white_);
+            }
+            std::cout << '\n';
+        }
+    }
+
+private:
+    int margin_;
+    std::string black_;
+    std::string white_;
+};
+
+}
+
+int main(int argc, char **argv) {
+    try {
+        if (argc < 2) {
+            std::cerr << "Usage: " << argv[0] << " <text-to-encode>\n";
+            return 1;
+        }
+
+        qrcode::QR qr(argv[1], QR_ECLEVEL_M);
+        qrcode::TerminalRenderer renderer;
+        renderer.render(qr);
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << "\n";
+        return 1;
+    }
+
+    return 0;
+}
