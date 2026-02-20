@@ -1,3 +1,5 @@
+#include "cli.h"
+
 #include <exception>
 #include <fstream>
 #include <iostream>
@@ -80,16 +82,13 @@ private:
 
 int main(int argc, char **argv) {
     try {
-        if (argc < 2) {
-            std::cerr << "Usage: " << argv[0] << " <text-to-encode> [output.svg]\n";
-            return 1;
-        }
+        auto cli = Cli::parse(argc, argv);
 
-        qrcode::QR qr(argv[1], QR_ECLEVEL_M);
+        qrcode::QR qr(cli.text, QR_ECLEVEL_M);
 
-        if (argc >= 3) {
+        if (!cli.output.empty()) {
             qrcode::SVGRenderer renderer;
-            renderer.render(qr, argv[2]);
+            renderer.render(qr, cli.output);
         } else {
             qrcode::TerminalRenderer renderer;
             renderer.render(qr);
