@@ -36,8 +36,9 @@ public:
         for (int y = -margin_; y < qr.width() + margin_; ++y) {
             for (int x = -margin_; x < qr.width() + margin_; ++x) {
                 bool black = false;
-                if (x >= 0 && y >= 0 && x < qr.width() && y < qr.width())
+                if (x >= 0 && y >= 0 && x < qr.width() && y < qr.width()) {
                     black = qr.data()[y * qr.width() + x] & 1;
+                }
 
                 std::cout << (black ? black_ : white_);
             }
@@ -65,11 +66,14 @@ public:
         int size = (qr.width() + margin_ * 2) * scale_;
         out << "<svg xmlns='http://www.w3.org/2000/svg' width='" << size << "' height='" << size << "'>\n";
         out << "<rect width='100%' height='100%' fill='white'/>\n";
-        for (int y = 0; y < qr.width(); ++y)
-            for (int x = 0; x < qr.width(); ++x)
-                if (qr.data()[y * qr.width() + x] & 1)
+        for (int y = 0; y < qr.width(); ++y) {
+            for (int x = 0; x < qr.width(); ++x) {
+                if (qr.data()[y * qr.width() + x] & 1) {
                     out << "<rect x='" << (x + margin_) * scale_ << "' y='" << (y + margin_) * scale_
                         << "' width='" << scale_ << "' height='" << scale_ << "'/>\n";
+                }
+            }
+        }
         out << "</svg>\n";
     }
 
